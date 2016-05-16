@@ -9,6 +9,9 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/codecommit"
 	"hash"
 	"io"
 	"io/ioutil"
@@ -107,8 +110,47 @@ func shouldRun(path string, after time.Time) bool {
 	return lastRun.Before(after)
 }
 
-func didRun(path string, t time.Time) {
-	updates[path] = t
+func didRun(r commandRequest, t time.Time) {
+	dispatchActionAfterRunCmd(r)
+	updates[r.abspath] = t
+}
+
+func dispatchActionAfterRunCmd(r commandRequest) {
+	for _, cmd := range r.cmds {
+		for _, arg := range cmd.Args {
+			if arg == "--bare" {
+				createCodeCommitRepo(r, cmd.Args)
+			}
+		}
+	}
+}
+
+func createCodeCommitRepo(r commandRequest, args []string) {
+	svc := codecommit.New(session.New(), &aws.Config{Region: aws.String("us-east-1")})
+
+	repoName := filepath.Base(args[len(args)-1])
+	params := &codecommit.CreateRepositoryInput{
+		RepositoryName: aws.String(repoName),
+	}
+	resp, err := svc.CreateRepository(params)
+
+	if err != nil {
+		log.Printf("create repository in codecommit failed: %s", err.Error())
+		return
+	}
+
+	codeCommitRepo := fmt.Sprintf("ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/%v",
+		repoName)
+
+	// Pretty-print the response data.
+	cmds := []*exec.Cmd{
+		exec.Command(*git, "remote", "add", "codecommit", codeCommitRepo),
+		exec.Command(*git, "push", "codecommit", "--all"),
+	}
+
+	queueCommand(r.w, true, filepath.Join(*thePath, repoName), cmds)
+
+	log.Printf(fmt.Sprintf("%v", resp))
 }
 
 func pathRunner(ch chan commandRequest) {
@@ -116,7 +158,7 @@ func pathRunner(ch chan commandRequest) {
 		if shouldRun(r.abspath, r.after) {
 			t := time.Now()
 			runCommands(r.w, r.bg, r.abspath, r.cmds)
-			didRun(r.abspath, t)
+			didRun(r, t)
 		} else {
 			log.Printf("Skipping redundant update: %v", r.abspath)
 			if !r.bg {
@@ -216,6 +258,7 @@ func createRepo(w http.ResponseWriter, section string,
 
 	repo := fmt.Sprintf("git://github.com/%v/%v.git",
 		ownerName, p.Repository.Name)
+
 	if p.Repository.Private {
 		repo = fmt.Sprintf("git@github.com:%v/%v.git",
 			ownerName, p.Repository.Name)
@@ -229,7 +272,7 @@ func createRepo(w http.ResponseWriter, section string,
 	if bg {
 		w.WriteHeader(201)
 	}
-	queueCommand(w, true, "/tmp", cmds)
+	queueCommand(w, true, *thePath, cmds)
 }
 
 func doUpdate(w http.ResponseWriter, path string,
