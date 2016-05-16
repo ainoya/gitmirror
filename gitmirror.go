@@ -211,6 +211,7 @@ func updateGit(w http.ResponseWriter, section string,
 		exec.Command(*git, "gc", "--auto"),
 		exec.Command(filepath.Join(abspath, "hooks/post-fetch")),
 		exec.Command(filepath.Join(*thePath, "bin/post-fetch")),
+		exec.Command(*git, "push", "codecommit", "--all"),
 	}
 
 	cmds[2].Stdin = bytes.NewBuffer(payload)
