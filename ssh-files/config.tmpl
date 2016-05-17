@@ -1,12 +1,10 @@
+IdentitiesOnly yes
+StrictHostKeyChecking no
+UserKnownHostsFile=/dev/null
+
 Host github.com
   IdentityFile ~/.ssh/id_rsa_github
-  IdentitiesOnly yes
-  StrictHostKeyChecking no
-  UserKnownHostsFile=/dev/null
 
 Host git-codecommit.us-east-1.amazonaws.com
   User #CODECOMMIT_USER_NAME#
   IdentityFile ~/.ssh/id_rsa_codecommit
-  IdentitiesOnly yes
-  StrictHostKeyChecking no
-  UserKnownHostsFile=/dev/null
