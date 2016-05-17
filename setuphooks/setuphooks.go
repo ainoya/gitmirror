@@ -22,8 +22,8 @@ import (
 const base = "https://api.github.com"
 
 var (
-	username = flag.String("user", "", "Your github username")
-	password = flag.String("pass", "", "Your github password")
+	username = flag.String("username", "", "Your github username")
+	token    = flag.String("token", "", "Your github token")
 	org      = flag.String("org", "", "Organization to check")
 	noop     = flag.Bool("n", false, "If true, don't make any hook changes")
 	test     = flag.Bool("t", false, "Test hooks when creating them")
@@ -118,7 +118,7 @@ func (h hook) Test(r repo) {
 	req, err := http.NewRequest("POST", u, nil)
 	maybeFatal("hook test", err)
 
-	req.SetBasicAuth(*username, *password)
+	req.Header.Set("Authorization", fmt.Sprintf("token %s", token))
 	retryableHTTP("hook test", 204, req, nil)
 }
 
@@ -167,7 +167,7 @@ func getJSON(name, subu string, out interface{}) string {
 	req, err := http.NewRequest("GET", u, nil)
 	maybeFatal(name, err)
 
-	req.SetBasicAuth(*username, *password)
+	req.Header.Set("Authorization", fmt.Sprintf("token %s", token))
 	for i := 0; i < 3; i++ {
 		if i > 0 {
 			log.Printf("Retrying JSON req to %v", req.URL)
@@ -276,8 +276,8 @@ func createHook(r repo) hook {
 		bytes.NewReader(body))
 	maybeFatal("creating hook", err)
 
-	req.SetBasicAuth(*username, *password)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", token)
 	req.ContentLength = int64(len(body))
 
 	rv := hook{}
@@ -293,7 +293,7 @@ func teardown(id int, r repo) {
 		nil)
 	maybeFatal("deleting hook", err)
 
-	req.SetBasicAuth(*username, *password)
+	req.Header.Set("Authorization", token)
 	retryableHTTP("create hook", 204, req, nil)
 }
 
@@ -346,7 +346,11 @@ func getRepo(name string) repo {
 	rv := repo{}
 	parts := strings.Split(name, "/")
 	if len(parts) == 1 {
-		rv.FullName = *username + "/" + parts[0]
+		name := *username
+		if *org != "" {
+			name = *org
+		}
+		rv.FullName = name + "/" + parts[0]
 		rv.Name = parts[0]
 		rv.Owner.Login = *username
 	} else {

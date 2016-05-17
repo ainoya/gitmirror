@@ -145,7 +145,7 @@ func createCodeCommitRepo(r commandRequest, args []string) {
 	// Pretty-print the response data.
 	cmds := []*exec.Cmd{
 		exec.Command(*git, "remote", "add", "codecommit", codeCommitRepo),
-		exec.Command(*git, "push", "codecommit", "--all"),
+		exec.Command(*git, "push", "codecommit", "--all", "--force"),
 	}
 
 	queueCommand(r.w, true, filepath.Join(*thePath, repoName), cmds)
@@ -211,7 +211,7 @@ func updateGit(w http.ResponseWriter, section string,
 		exec.Command(*git, "gc", "--auto"),
 		exec.Command(filepath.Join(abspath, "hooks/post-fetch")),
 		exec.Command(filepath.Join(*thePath, "bin/post-fetch")),
-		exec.Command(*git, "push", "codecommit", "--all"),
+		exec.Command(*git, "push", "codecommit", "--all", "--force"),
 	}
 
 	cmds[2].Stdin = bytes.NewBuffer(payload)
