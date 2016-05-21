@@ -1,3 +1,7 @@
+# Overview
+
+This is a fork repository of [dustin/gitmirror](https://github.com/dustin/gitmirror), for integrationg with [AWS CodeCommit](https://aws.amazon.com/codecommit/?nc1=h_ls). In this forked version, gitmirror server creates (or updates) a backup repository in local filesystem but also in AWS CodeCommit when it receives push webhooks from GitHub.
+
 # What's This?
 
 I've got a few git repos places I automatically clone git repos and
