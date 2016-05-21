@@ -277,7 +277,7 @@ func createHook(r repo) hook {
 	maybeFatal("creating hook", err)
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", token)
+	req.Header.Set("Authorization", fmt.Sprintf("token %s", token))
 	req.ContentLength = int64(len(body))
 
 	rv := hook{}
@@ -293,7 +293,7 @@ func teardown(id int, r repo) {
 		nil)
 	maybeFatal("deleting hook", err)
 
-	req.Header.Set("Authorization", token)
+	req.Header.Set("Authorization", fmt.Sprintf("token %s", token))
 	retryableHTTP("create hook", 204, req, nil)
 }
 
