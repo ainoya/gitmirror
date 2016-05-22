@@ -104,7 +104,7 @@ func runCommands(w http.ResponseWriter, bg bool,
 }
 
 func shouldRun(path string, after time.Time) bool {
-	if path == "/tmp" {
+	if path == *thePath {
 		return true
 	}
 	lastRun := updates[path]
@@ -157,7 +157,7 @@ func createCodeCommitRepo(r commandRequest, args []string) {
 		exec.Command(*git, "push", "codecommit", "--all", "--force"),
 	}
 
-	queueCommand(r.w, true, filepath.Join(*thePath, repoName), cmds)
+	runCommands(r.w, true, filepath.Join(*thePath, repoName), cmds)
 
 	log.Printf(fmt.Sprintf("%v", resp))
 }
