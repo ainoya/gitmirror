@@ -333,12 +333,27 @@ func handlePost(w http.ResponseWriter, req *http.Request, bg bool) {
 	}
 	b := []byte(form.Get("payload"))
 
+	p := struct {
+		Repository struct {
+			Owner   interface{}
+			Private bool
+			Name    string
+		}
+	}{}
+
+	err = json.Unmarshal(b, &p)
+	if err != nil {
+		log.Printf("Error unmarshalling data: %v", err)
+		http.Error(w, "Error parsing JSON", http.StatusInternalServerError)
+		return
+	}
+
 	if !(*secret == "" || checkHMAC(mac, req.Header.Get("X-Hub-Signature"))) {
 		http.Error(w, "not authorized", http.StatusUnauthorized)
 		return
 	}
 
-	path := getPath(req)
+	path := p.Repository.Name
 
 	if exists(filepath.Join(*thePath, path)) {
 		doUpdate(w, path, bg, b)
