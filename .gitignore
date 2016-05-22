@@ -6,3 +6,4 @@ setuphooks/setuphooks-amd64
 
 ssh-files/*
 !ssh-files/config.tmpl
+.envrc
