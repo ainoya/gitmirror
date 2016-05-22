@@ -10,6 +10,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/codecommit"
 	"hash"
@@ -136,7 +137,15 @@ func createCodeCommitRepo(r commandRequest, args []string) {
 
 	if err != nil {
 		log.Printf("create repository in codecommit failed: %s", err.Error())
-		return
+		if awsErr, ok := err.(awserr.Error); ok {
+			if awsErr.Code() == "RepositoryNameExistsException" {
+				log.Printf("repository is already created: keep running update repository...")
+			} else {
+				return
+			}
+		} else {
+			return
+		}
 	}
 
 	codeCommitRepo := fmt.Sprintf("ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/%v",

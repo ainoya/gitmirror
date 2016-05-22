@@ -118,7 +118,7 @@ func (h hook) Test(r repo) {
 	req, err := http.NewRequest("POST", u, nil)
 	maybeFatal("hook test", err)
 
-	req.Header.Set("Authorization", fmt.Sprintf("token %s", token))
+	req.Header.Set("Authorization", fmt.Sprintf("token %s", *token))
 	retryableHTTP("hook test", 204, req, nil)
 }
 
@@ -167,7 +167,7 @@ func getJSON(name, subu string, out interface{}) string {
 	req, err := http.NewRequest("GET", u, nil)
 	maybeFatal(name, err)
 
-	req.Header.Set("Authorization", fmt.Sprintf("token %s", token))
+	req.Header.Set("Authorization", fmt.Sprintf("token %s", *token))
 	for i := 0; i < 3; i++ {
 		if i > 0 {
 			log.Printf("Retrying JSON req to %v", req.URL)
@@ -277,7 +277,7 @@ func createHook(r repo) hook {
 	maybeFatal("creating hook", err)
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("token %s", token))
+	req.Header.Set("Authorization", fmt.Sprintf("token %s", *token))
 	req.ContentLength = int64(len(body))
 
 	rv := hook{}
@@ -293,7 +293,7 @@ func teardown(id int, r repo) {
 		nil)
 	maybeFatal("deleting hook", err)
 
-	req.Header.Set("Authorization", fmt.Sprintf("token %s", token))
+	req.Header.Set("Authorization", fmt.Sprintf("token %s", *token))
 	retryableHTTP("create hook", 204, req, nil)
 }
 
